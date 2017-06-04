@@ -4,7 +4,7 @@ Allows for easier interaction with the Evanston, IL parking ticket payment site.
 
 It now keeps track of all tickets that it sees, and is able to graph the total amount of money you spent on parking tickets in one month in a plotly graph. The graphing itself is all handled offline, so no need for an API key or anything.
 
-#Dependencies
+# Dependencies
 * selenium
 * chromedriver
 * numpy (Graphing only)
