@@ -27,7 +27,7 @@ submit.click()
 try:
 	alertMessage = driver.find_element_by_xpath("//*[contains(text(), 'sorry')]")
 	assert (len(alertMessage) == 0), "You have no tickets."
-	assert ('sorry' not in driver.page_source), "You have no tickets"
+	assert ('sorry' not in driver.page_source), "You have no new tickets"
 except NoSuchElementException:
 	numTickets = driver.find_element_by_id("SelectedCount").text
 	print("You have " + numTickets + " tickets to be paid.")
