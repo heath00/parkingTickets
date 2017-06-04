@@ -1,5 +1,16 @@
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+# from dataHandler import graph, writeNewTicket, parseData
+import dataHandler
+from Ticket import ticket
+
 webpage = "https://www.dspayments.com/evanston"
+
+viewData = input("Want to view current ticket data? Type y or n: ")
+
+if viewData == 'y':
+	dataHandler.graph("ticketData.txt")
+
 
 plateInfo = ['DELETED',				   # License Plate Number
 			 'DELETED']				   # License Plate State, with state abbreviation in all caps (i.e. Alabama is 'AL')
@@ -13,23 +24,50 @@ driver.find_element_by_xpath("//select[@name='PlateStateProv']/option[@value='" 
 submit = driver.find_element_by_class_name("search_btn")
 submit.click()
 
-alertMessage = driver.find_element_by_xpath("//*[contains(text(), 'sorry')]")
+try:
+	alertMessage = driver.find_element_by_xpath("//*[contains(text(), 'sorry')]")
+	assert (len(alertMessage) == 0), "You have no tickets."
+	assert ('sorry' not in driver.page_source), "You have no tickets"
+except NoSuchElementException:
+	numTickets = driver.find_element_by_id("SelectedCount").text
+	print("You have " + numTickets + " tickets to be paid.")
 
-assert ('sorry' not in driver.page_source), "You have no tickets"
+currTickets = dataHandler.parseData("ticketData.txt")
+newTickets = []
+
+for i in range(1,int(numTickets)+1):
+	i_as_str = str(i)
+	ticketNo = driver.find_element_by_xpath("//div[@id='citationList']/table/tbody/tr[" + i_as_str + "]/td[2]").text
+	if ticketNo in currTickets:
+		continue
+
+	ticketDate = driver.find_element_by_xpath("//div[@id='citationList']/table/tbody/tr[" + i_as_str + "]/td[5]").text
+	slashIndex = ticketDate.index("/")
+	secondSlashIndex = ticketDate[slashIndex+1:].index("/") + slashIndex + 1
+	ticketDate = ticketDate[0:slashIndex+1] + ticketDate[secondSlashIndex+1:]
+
+	ticketAmt = driver.find_element_by_xpath("//div[@id='citationList']/table/tbody/tr[" + i_as_str + "]/td[6]").text
+	ticketAmt = ticketAmt[1:]
+
+	newTickets.append(ticket(ticketNo, ticketDate, ticketAmt))
+
+dataHandler.writeNewTicket("ticketData.txt", newTickets)
+
 paymentOption = input('Want to pay the ticket(s)? Type y or n: ')
+
 
 if (paymentOption == 'y'):
 	submit = driver.find_element_by_id("citationPayment")
 	submit.click()
-	personalInfo = ['DELETED',				# 'Credit' or 'Debit'
-					'DELETED',				# Expiration month with two digits (i.e. January is '01', October is '10')
-					'DELETED',				# Expiration year in format YYYY
-					'DELETED',				# Card type--Options are 'VISA', 'MC'(MasterCard), 'DISC' (Discover)
-					'DELETED',				# Name as it appears on card
-					'DELETED',				# Phone number without dashes
-					'DELETED', 				# Card number
-					'DELETED',				# Card security code
-					'DELETED'] 				# Billing zip code
+	personalInfo = ['DELETED',			# 'Credit' or 'Debit'
+					'DELETED',			# Expiration month with two digits (i.e. January is '01', October is '10')
+					'DELETED',			# Expiration year in format YYYY
+					'DELETED',			# Card type--Options are 'VISA', 'MC'(MasterCard), 'DISC' (Discover)
+					'DELETED',			# Name as it appears on card
+					'DELETED',			# Phone number without dashes
+					'DELETED', 			# Card number
+					'DELETED',			# Card security code
+					'DELETED'] 			# Billing zip code
 
 	textboxIDs = ['CardholderName',
 				  'PhoneNumber',
